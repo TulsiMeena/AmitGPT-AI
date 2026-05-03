@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AmitGPT AI - Modern Assistant</title>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-color: #ffffff;
+            --sidebar-bg: #f9f9fb;
+            --text-color: #202123;
+            --border-color: #e5e7eb;
+            --user-bubble: #007bff;
+            --ai-bubble: #f3f4f6;
+            --input-bg: #ffffff;
+            --sidebar-hover: #ececf1;
+            --modal-bg: rgba(0, 0, 0, 0.5);
+            --modal-content: #ffffff;
+            --accent-color: #10a37f;
+        }
+
+        .dark-mode {
+            --bg-color: #343541;
+            --sidebar-bg: #202123;
+            --text-color: #ececf1;
+            --border-color: #4d4d4f;
+            --user-bubble: #007bff;
+            --ai-bubble: #444654;
+            --input-bg: #40414f;
+            --sidebar-hover: #2a2b32;
+            --modal-bg: rgba(0, 0, 0, 0.8);
+            --modal-content: #343541;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+            transition: background-color 0.3s ease;
+        }
+
+        .app-container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 260px;
+            background-color: var(--sidebar-bg);
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+            border-right: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 15px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 10px;
+        }
+
+        .logo {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .sidebar-nav ul {
+            list-style: none;
+        }
+
+        .sidebar-nav li {
+            padding: 12px 15px;
+            margin: 4px 0;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.9rem;
+        }
+
+        .sidebar-nav li:hover {
+            background-color: var(--sidebar-hover);
+        }
+
+        .sidebar-nav li i {
+            width: 16px;
+        }
+
+        .sidebar-footer {
+            margin-top: auto;
+            padding: 10px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        #theme-toggle {
+            width: 100%;
+            padding: 10px;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: background 0.2s;
+        }
+
+        #theme-toggle:hover {
+            background-color: var(--sidebar-hover);
+        }
+
+        /* Main Content Styles */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            position: relative;
+        }
+
+        /* Mobile Adjustments */
+        .mobile-menu-btn, .close-sidebar {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-size: 1.25rem;
+            cursor: pointer;
+            padding: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                left: -260px;
+                height: 100%;
+                box-shadow: 5px 0 15px rgba(0,0,0,0.3);
+            }
+            .sidebar.active {
+                left: 0;
+            }
+            .mobile-menu-btn {
+                display: block;
+                position: absolute;
+                top: 10px;
+                left: 10px;
+                z-index: 101;
+            }
+            .close-sidebar {
+                display: block;
+                margin-left: auto;
+            }
+            .sidebar-header {
+                display: flex;
+                align-items: center;
+            }
+            .main-content {
+                padding-top: 50px;
+            }
+        }
+
+        /* Chat Styles */
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 0;
+            scroll-behavior: smooth;
+        }
+
+        .messages-list {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .message {
+            display: flex;
+            margin-bottom: 24px;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .user-message {
+            justify-content: flex-end;
+        }
+
+        .ai-message {
+            justify-content: flex-start;
+        }
+
+        .bubble {
+            max-width: 80%;
+            padding: 12px 18px;
+            border-radius: 20px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .user-message .bubble {
+            background-color: var(--user-bubble);
+            color: #ffffff;
+            border-bottom-right-radius: 4px;
+        }
+
+        .ai-message .bubble {
+            background-color: var(--ai-bubble);
+            color: var(--text-color);
+            border-bottom-left-radius: 4px;
+        }
+
+        /* Typing Indicator */
+        .typing-indicator {
+            max-width: 800px;
+            margin: 10px auto;
+            padding: 0 20px;
+            font-size: 0.8rem;
+            color: #8e8ea0;
+            font-style: italic;
+        }
+
+        /* Input Area Styles */
+        .input-area {
+            padding: 20px;
+            background-color: var(--bg-color);
+            border-top: 1px solid var(--border-color);
+        }
+
+        .input-container {
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        #user-input {
+            width: 100%;
+            padding: 14px 50px 14px 16px;
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-color);
+            font-size: 1rem;
+            outline: none;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+
+        #send-btn {
+            position: absolute;
+            right: 10px;
+            background: none;
+            border: none;
+            color: var(--accent-color);
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        #send-btn:hover {
+            background-color: rgba(16, 163, 127, 0.1);
+        }
+
+        .disclaimer {
+            text-align: center;
+            font-size: 0.75rem;
+            color: #8e8ea0;
+            margin-top: 10px;
+        }
+
+        /* Quiz Styles */
+        .quiz-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .quiz-box, .quiz-result {
+            background-color: var(--ai-bubble);
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            animation: slideIn 0.5s ease;
+        }
+
+        .quiz-box h2 {
+            margin-bottom: 5px;
+            color: var(--accent-color);
+        }
+
+        .quiz-progress {
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+            color: #8e8ea0;
+        }
+
+        .question-text {
+            font-size: 1.2rem;
+            font-weight: 500;
+            margin-bottom: 25px;
+        }
+
+        .options-container {
+            display: grid;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        .option {
+            padding: 15px;
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .option:hover {
+            border-color: var(--accent-color);
+            background-color: rgba(16, 163, 127, 0.05);
+        }
+
+        .option.correct {
+            background-color: #28a745 !important;
+            color: white;
+            border-color: #28a745;
+        }
+
+        .option.wrong {
+            background-color: #dc3545 !important;
+            color: white;
+            border-color: #dc3545;
+        }
+
+        .quiz-footer button, .quiz-result button {
+            padding: 12px 24px;
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: opacity 0.2s;
+        }
+
+        .quiz-result button {
+            margin-top: 15px;
+            margin-right: 10px;
+        }
+
+        /* Modal Styles */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--modal-bg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: opacity 0.3s;
+        }
+
+        .modal-content {
+            background-color: var(--modal-content);
+            padding: 30px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .modal-content h3 {
+            margin-bottom: 15px;
+        }
+
+        .modal-content p {
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+            color: #8e8ea0;
+        }
+
+        .modal-content input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 20px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        .modal-content button {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        /* Animations & Helpers */
+        .hidden { display: none !important; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+    </style>
+</head>
+<body class="dark-mode">
+    <div class="app-container">
+        <!-- Mobile Menu Toggle -->
+        <button id="mobile-menu-btn" class="mobile-menu-btn">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h1 class="logo">AmitGPT AI</h1>
+                <button id="close-sidebar" class="close-sidebar">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li id="new-chat-btn"><i class="fas fa-plus"></i> New Chat</li>
+                    <li id="history-btn"><i class="fas fa-history"></i> History</li>
+                    <li id="quiz-mode-btn"><i class="fas fa-lightbulb"></i> Quiz Mode</li>
+                    <li id="settings-btn"><i class="fas fa-cog"></i> Settings</li>
+                </ul>
+            </nav>
+            <div class="sidebar-footer">
+                <button id="theme-toggle"><i class="fas fa-moon"></i> Dark Mode</button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Chat Container -->
+            <div id="chat-container" class="chat-container">
+                <div class="messages-list" id="messages-list">
+                    <!-- Welcome Message -->
+                    <div class="message ai-message">
+                        <div class="bubble">
+                            Hello 👋 I am AmitGPT AI, your smart assistant. How can I help you today?
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Typing Indicator -->
+                <div id="typing-indicator" class="typing-indicator hidden">
+                    <span>AmitGPT is typing...</span>
+                </div>
+            </div>
+
+            <!-- Quiz Container (Hidden by default) -->
+            <div id="quiz-container" class="quiz-container hidden">
+                <div class="quiz-box">
+                    <h2 id="quiz-category">Category</h2>
+                    <div class="quiz-progress">Question <span id="current-q">1</span>/10</div>
+                    <div id="question-text" class="question-text">Question goes here?</div>
+                    <div id="options-container" class="options-container">
+                        <!-- Options will be injected here -->
+                    </div>
+                    <div id="quiz-footer" class="quiz-footer hidden">
+                        <button id="next-q-btn">Next Question</button>
+                    </div>
+                </div>
+
+                <!-- Quiz Result Screen -->
+                <div id="quiz-result" class="quiz-result hidden">
+                    <h2>Quiz Completed!</h2>
+                    <p>Your Score: <span id="final-score">0</span>%</p>
+                    <button id="restart-quiz">Restart Quiz</button>
+                    <button id="back-to-chat">Back to Chat</button>
+                </div>
+            </div>
+
+            <!-- Input Bar -->
+            <div class="input-area">
+                <div class="input-container">
+                    <input type="text" id="user-input" placeholder="Type your message here..." autocomplete="off">
+                    <button id="send-btn"><i class="fas fa-paper-plane"></i></button>
+                </div>
+                <p class="disclaimer">AmitGPT AI may produce inaccurate information.</p>
+            </div>
+        </main>
+    </div>
+
+    <!-- API Key Modal -->
+    <div id="api-modal" class="modal">
+        <div class="modal-content">
+            <h3>Enter Hugging Face API Key</h3>
+            <p>To use AmitGPT AI, please provide your Hugging Face API Key.</p>
+            <input type="password" id="api-key-input" placeholder="hf_...">
+            <button id="save-api-key">Save & Continue</button>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const chatContainer = document.getElementById('chat-container');
+        const messagesList = document.getElementById('messages-list');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
+        const typingIndicator = document.getElementById('typing-indicator');
+        const apiModal = document.getElementById('api-modal');
+        const apiKeyInput = document.getElementById('api-key-input');
+        const saveApiKeyBtn = document.getElementById('save-api-key');
+
+        let hfApiKey = localStorage.getItem('hf_api_key') || '';
+        let chatHistory = JSON.parse(sessionStorage.getItem('chat_history')) || [];
+
+        // Initialize UI
+        window.onload = () => {
+            if (!hfApiKey) {
+                apiModal.classList.remove('hidden');
+            }
+            loadChatHistory();
+        };
+
+        // Event Listeners for Chat
+        sendBtn.addEventListener('click', sendMessage);
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+        saveApiKeyBtn.addEventListener('click', () => {
+            const key = apiKeyInput.value.trim();
+            if (key) {
+                hfApiKey = key;
+                localStorage.setItem('hf_api_key', key);
+                apiModal.classList.add('hidden');
+            }
+        });
+
+        // Chat Functions
+        function sendMessage() {
+            const message = userInput.value.trim();
+            if (!message || !hfApiKey) return;
+
+            // Add User Message to UI
+            appendMessage('user', message);
+            userInput.value = '';
+
+            // Add to History
+            chatHistory.push({ role: 'user', content: message });
+            saveChatHistory();
+
+            // Show Typing Indicator
+            showTyping(true);
+
+            // Fetch AI Response
+            fetchAIResponse(message);
+        }
+
+        async function fetchAIResponse(userMsg) {
+            const apiUrl = 'https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct';
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${hfApiKey}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        inputs: `<s>[INST] ${userMsg} [/INST]`,
+                        parameters: {
+                            max_new_tokens: 500,
+                            return_full_text: false
+                        }
+                    })
+                });
+
+                const data = await response.json();
+
+                showTyping(false);
+
+                if (response.ok) {
+                    const aiMsg = data[0].generated_text.trim();
+                    appendMessage('ai', aiMsg);
+                    chatHistory.push({ role: 'ai', content: aiMsg });
+                    saveChatHistory();
+                } else {
+                    console.error('API Error:', data);
+                    appendMessage('ai', "I'm sorry, I'm having trouble connecting to the brain. Please check your API key or try again later.");
+                }
+            } catch (error) {
+                console.error('Fetch Error:', error);
+                showTyping(false);
+                appendMessage('ai', "Oops! Something went wrong. Please check your internet connection.");
+            }
+        }
+
+        function appendMessage(role, text) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role}-message`;
+
+            const bubbleDiv = document.createElement('div');
+            bubbleDiv.className = 'bubble';
+            bubbleDiv.innerText = text;
+
+            messageDiv.appendChild(bubbleDiv);
+            messagesList.appendChild(messageDiv);
+
+            // Auto Scroll
+            scrollToBottom();
+        }
+
+        function showTyping(show) {
+            if (show) {
+                typingIndicator.classList.remove('hidden');
+            } else {
+                typingIndicator.classList.add('hidden');
+            }
+            scrollToBottom();
+        }
+
+        function scrollToBottom() {
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function saveChatHistory() {
+            sessionStorage.setItem('chat_history', JSON.stringify(chatHistory));
+        }
+
+        function loadChatHistory() {
+            if (chatHistory.length > 0) {
+                // Keep the welcome message and add historical ones
+                chatHistory.forEach(msg => {
+                    appendMessage(msg.role, msg.content);
+                });
+            }
+        }
+
+        // Quiz System
+        const quizData = [
+            // GK
+            { category: "GK", question: "What is the capital of France?", options: ["London", "Berlin", "Paris", "Madrid"], correct: 2 },
+            { category: "GK", question: "Which is the largest planet in our solar system?", options: ["Mars", "Saturn", "Jupiter", "Earth"], correct: 2 },
+            { category: "GK", question: "Who wrote 'Romeo and Juliet'?", options: ["Charles Dickens", "William Shakespeare", "Mark Twain", "Leo Tolstoy"], correct: 1 },
+            { category: "GK", question: "What is the currency of Japan?", options: ["Yuan", "Won", "Yen", "Ringgit"], correct: 2 },
+            { category: "GK", question: "Which is the tallest mountain in the world?", options: ["K2", "Kangchenjunga", "Mount Everest", "Lhotse"], correct: 2 },
+            { category: "GK", question: "In which year did World War II end?", options: ["1943", "1944", "1945", "1946"], correct: 2 },
+            { category: "GK", question: "What is the largest ocean on Earth?", options: ["Atlantic Ocean", "Indian Ocean", "Arctic Ocean", "Pacific Ocean"], correct: 3 },
+            { category: "GK", question: "Who painted the Mona Lisa?", options: ["Vincent van Gogh", "Pablo Picasso", "Leonardo da Vinci", "Claude Monet"], correct: 2 },
+            { category: "GK", question: "What is the capital of Australia?", options: ["Sydney", "Melbourne", "Canberra", "Perth"], correct: 2 },
+            { category: "GK", question: "Which country is known as the Land of the Rising Sun?", options: ["China", "South Korea", "Japan", "Thailand"], correct: 2 },
+            { category: "GK", question: "What is the smallest country in the world?", options: ["Monaco", "Nauru", "Vatican City", "San Marino"], correct: 2 },
+            { category: "GK", question: "Who is known as the 'Father of Computers'?", options: ["Alan Turing", "Charles Babbage", "Bill Gates", "Steve Jobs"], correct: 1 },
+            { category: "GK", question: "What is the capital of Italy?", options: ["Venice", "Florence", "Rome", "Milan"], correct: 2 },
+            { category: "GK", question: "Which is the longest river in the world?", options: ["Amazon", "Nile", "Yangtze", "Mississippi"], correct: 1 },
+            { category: "GK", question: "What is the most spoken language in the world?", options: ["English", "Spanish", "Hindi", "Mandarin Chinese"], correct: 3 },
+            { category: "GK", question: "Which element has the chemical symbol 'O'?", options: ["Gold", "Silver", "Oxygen", "Iron"], correct: 2 },
+            { category: "GK", question: "What is the capital of Canada?", options: ["Toronto", "Vancouver", "Montreal", "Ottawa"], correct: 3 },
+            { category: "GK", question: "Which planet is known as the Red Planet?", options: ["Venus", "Mars", "Saturn", "Neptune"], correct: 1 },
+            { category: "GK", question: "Who discovered penicillin?", options: ["Marie Curie", "Alexander Fleming", "Isaac Newton", "Albert Einstein"], correct: 1 },
+            { category: "GK", question: "What is the capital of Germany?", options: ["Munich", "Frankfurt", "Hamburg", "Berlin"], correct: 3 },
+            { category: "GK", question: "Which is the largest continent?", options: ["Africa", "North America", "South America", "Asia"], correct: 3 },
+            { category: "GK", question: "What is the hardest natural substance on Earth?", options: ["Gold", "Iron", "Diamond", "Platinum"], correct: 2 },
+            { category: "GK", question: "Who wrote 'Harry Potter'?", options: ["J.R.R. Tolkien", "J.K. Rowling", "Stephen King", "George R.R. Martin"], correct: 1 },
+            { category: "GK", question: "What is the capital of Spain?", options: ["Barcelona", "Seville", "Valencia", "Madrid"], correct: 3 },
+            { category: "GK", question: "Which gas do plants absorb from the atmosphere?", options: ["Oxygen", "Nitrogen", "Carbon Dioxide", "Hydrogen"], correct: 2 },
+            { category: "GK", question: "What is the largest animal in the world?", options: ["African Elephant", "Blue Whale", "Giraffe", "Colossal Squid"], correct: 1 },
+
+            // Science
+            { category: "Science", question: "What is the chemical symbol for water?", options: ["H2O", "CO2", "NaCl", "O2"], correct: 0 },
+            { category: "Science", question: "Which planet is closest to the Sun?", options: ["Venus", "Mars", "Mercury", "Earth"], correct: 2 },
+            { category: "Science", question: "What part of the cell is known as the powerhouse?", options: ["Nucleus", "Ribosome", "Mitochondria", "Cytoplasm"], correct: 2 },
+            { category: "Science", question: "What is the boiling point of water at sea level?", options: ["90°C", "100°C", "110°C", "120°C"], correct: 1 },
+            { category: "Science", question: "Which organ in the human body pumps blood?", options: ["Lungs", "Brain", "Heart", "Liver"], correct: 2 },
+            { category: "Science", question: "What is the speed of light?", options: ["300,000 km/s", "150,000 km/s", "450,000 km/s", "600,000 km/s"], correct: 0 },
+            { category: "Science", question: "What is the process by which plants make their food?", options: ["Respiration", "Digestion", "Photosynthesis", "Fermentation"], correct: 2 },
+            { category: "Science", question: "How many bones are there in the adult human body?", options: ["186", "206", "226", "246"], correct: 1 },
+            { category: "Science", question: "What is the chemical symbol for Gold?", options: ["Gd", "Ag", "Au", "Fe"], correct: 2 },
+            { category: "Science", question: "Which gas is most abundant in the Earth's atmosphere?", options: ["Oxygen", "Carbon Dioxide", "Nitrogen", "Argon"], correct: 2 },
+            { category: "Science", question: "What is the study of living organisms called?", options: ["Chemistry", "Physics", "Biology", "Geology"], correct: 2 },
+            { category: "Science", question: "What is the main source of energy for the Earth?", options: ["The Moon", "The Sun", "The Wind", "Internal Heat"], correct: 1 },
+            { category: "Science", question: "Who proposed the theory of relativity?", options: ["Isaac Newton", "Nikola Tesla", "Albert Einstein", "Stephen Hawking"], correct: 2 },
+            { category: "Science", question: "What is the force that pulls objects toward the Earth?", options: ["Magnetism", "Friction", "Gravity", "Inertia"], correct: 2 },
+            { category: "Science", question: "What is the most common state of matter in the universe?", options: ["Solid", "Liquid", "Gas", "Plasma"], correct: 3 },
+            { category: "Science", question: "What is the pH of pure water?", options: ["5", "6", "7", "8"], correct: 2 },
+            { category: "Science", question: "Which planet is known for its rings?", options: ["Jupiter", "Uranus", "Neptune", "Saturn"], correct: 3 },
+            { category: "Science", question: "What is the smallest unit of life?", options: ["Atom", "Molecule", "Cell", "Organ"], correct: 2 },
+            { category: "Science", question: "What is the largest organ in the human body?", options: ["Liver", "Brain", "Skin", "Heart"], correct: 2 },
+            { category: "Science", question: "What instrument is used to measure temperature?", options: ["Barometer", "Thermometer", "Hygrometer", "Anemometer"], correct: 1 },
+            { category: "Science", question: "What is the main gas found in the Sun?", options: ["Oxygen", "Nitrogen", "Hydrogen", "Carbon"], correct: 2 },
+            { category: "Science", question: "Which vitamin is produced when skin is exposed to sunlight?", options: ["Vitamin A", "Vitamin B", "Vitamin C", "Vitamin D"], correct: 3 },
+            { category: "Science", question: "What is the chemical symbol for Iron?", options: ["Ir", "Fe", "In", "Au"], correct: 1 },
+            { category: "Science", question: "What is the center of an atom called?", options: ["Proton", "Neutron", "Electron", "Nucleus"], correct: 3 },
+            { category: "Science", question: "What is the freezing point of water?", options: ["0°C", "32°C", "Both A and B", "100°C"], correct: 2 },
+            { category: "Science", question: "What is the most common element in the human body?", options: ["Carbon", "Hydrogen", "Oxygen", "Nitrogen"], correct: 2 },
+
+            // History
+            { category: "History", question: "Who was the first President of the United States?", options: ["Thomas Jefferson", "John Adams", "George Washington", "Abraham Lincoln"], correct: 2 },
+            { category: "History", question: "In which year did the Titanic sink?", options: ["1910", "1911", "1912", "1913"], correct: 2 },
+            { category: "History", question: "Who was the first woman to win a Nobel Prize?", options: ["Mother Teresa", "Marie Curie", "Jane Addams", "Alva Myrdal"], correct: 1 },
+            { category: "History", question: "The Great Wall of China was primarily built to protect against which group?", options: ["Romans", "Mongols", "Egyptians", "Persians"], correct: 1 },
+            { category: "History", question: "Who was the first man to walk on the moon?", options: ["Buzz Aldrin", "Yuri Gagarin", "Neil Armstrong", "John Glenn"], correct: 2 },
+            { category: "History", question: "What was the name of the ship that brought the Pilgrims to America in 1620?", options: ["Santa Maria", "Mayflower", "Beagle", "Endurance"], correct: 1 },
+            { category: "History", question: "Who was the leader of the Soviet Union during World War II?", options: ["Vladimir Lenin", "Leon Trotsky", "Joseph Stalin", "Nikita Khrushchev"], correct: 2 },
+            { category: "History", question: "The French Revolution began in which year?", options: ["1779", "1789", "1799", "1809"], correct: 1 },
+            { category: "History", question: "Who was the queen of Egypt who had a relationship with Julius Caesar?", options: ["Nefertiti", "Hatshepsut", "Cleopatra", "Isis"], correct: 2 },
+            { category: "History", question: "In which city was John F. Kennedy assassinated?", options: ["Houston", "Dallas", "Austin", "Miami"], correct: 1 },
+            { category: "History", question: "Who was the primary author of the Declaration of Independence?", options: ["Benjamin Franklin", "George Washington", "Thomas Jefferson", "James Madison"], correct: 2 },
+            { category: "History", question: "The Magna Carta was signed in which year?", options: ["1215", "1251", "1512", "1521"], correct: 0 },
+            { category: "History", question: "Who was the first person to circumnavigate the globe?", options: ["Christopher Columbus", "Vasco da Gama", "Ferdinand Magellan", "James Cook"], correct: 2 },
+            { category: "History", question: "What was the ancient civilization that built the Pyramids of Giza?", options: ["Maya", "Inca", "Aztec", "Egyptians"], correct: 3 },
+            { category: "History", question: "The Cold War was a period of tension between which two superpowers?", options: ["USA and China", "USA and USSR", "UK and USSR", "Germany and USSR"], correct: 1 },
+            { category: "History", question: "Who was known as the 'Iron Lady'?", options: ["Indira Gandhi", "Margaret Thatcher", "Angela Merkel", "Golda Meir"], correct: 1 },
+            { category: "History", question: "Which empire was ruled by Julius Caesar?", options: ["Greek", "Ottoman", "Roman", "Persian"], correct: 2 },
+            { category: "History", question: "Who discovered America in 1492?", options: ["Amerigo Vespucci", "Christopher Columbus", "Marco Polo", "Leif Erikson"], correct: 1 },
+            { category: "History", question: "What was the name of the first artificial satellite launched into space?", options: ["Apollo 11", "Vostok 1", "Sputnik 1", "Explorer 1"], correct: 2 },
+            { category: "History", question: "Who was the Greek god of the sea?", options: ["Zeus", "Hades", "Poseidon", "Apollo"], correct: 2 },
+            { category: "History", question: "Which war was fought between the North and South regions of the USA?", options: ["Revolutionary War", "War of 1812", "Civil War", "WWI"], correct: 2 },
+            { category: "History", question: "Who was the first Emperor of Rome?", options: ["Julius Caesar", "Augustus", "Nero", "Caligula"], correct: 1 },
+            { category: "History", question: "What was the name of the ancient trade route connecting China to the Mediterranean?", options: ["Spice Road", "Gold Road", "Silk Road", "Tea Road"], correct: 2 },
+            { category: "History", question: "In which year did the Berlin Wall fall?", options: ["1987", "1988", "1989", "1990"], correct: 2 },
+            { category: "History", question: "Who was the leader of the Civil Rights Movement in the USA and gave the 'I Have a Dream' speech?", options: ["Malcolm X", "Rosa Parks", "Martin Luther King Jr.", "Nelson Mandela"], correct: 2 },
+            { category: "History", question: "The Renaissance began in which country?", options: ["France", "Germany", "Italy", "England"], correct: 2 },
+
+            // Geography
+            { category: "Geography", question: "What is the capital of Brazil?", options: ["Rio de Janeiro", "Sao Paulo", "Brasilia", "Salvador"], correct: 2 },
+            { category: "Geography", question: "Which is the largest country by land area?", options: ["Canada", "USA", "China", "Russia"], correct: 3 },
+            { category: "Geography", question: "Which country has the most population?", options: ["India", "China", "USA", "Indonesia"], correct: 0 },
+            { category: "Geography", question: "Mount Kilimanjaro is located in which continent?", options: ["Asia", "Africa", "South America", "Europe"], correct: 1 },
+            { category: "Geography", question: "What is the capital of Russia?", options: ["Saint Petersburg", "Moscow", "Novosibirsk", "Kazan"], correct: 1 },
+            { category: "Geography", question: "Which is the smallest continent by land area?", options: ["Europe", "Antarctica", "Australia", "South America"], correct: 2 },
+            { category: "Geography", question: "The Amazon Rainforest is mostly located in which country?", options: ["Peru", "Colombia", "Brazil", "Bolivia"], correct: 2 },
+            { category: "Geography", question: "Which desert is the largest hot desert in the world?", options: ["Gobi", "Kalahari", "Sahara", "Arabian"], correct: 2 },
+            { category: "Geography", question: "What is the capital of Egypt?", options: ["Alexandria", "Giza", "Luxor", "Cairo"], correct: 3 },
+            { category: "Geography", question: "Which country is both in Europe and Asia?", options: ["Greece", "Turkey", "Italy", "Poland"], correct: 1 },
+            { category: "Geography", question: "What is the capital of South Korea?", options: ["Busan", "Incheon", "Seoul", "Daegu"], correct: 2 },
+            { category: "Geography", question: "Which is the deepest ocean in the world?", options: ["Atlantic", "Indian", "Arctic", "Pacific"], correct: 3 },
+            { category: "Geography", question: "The River Thames flows through which city?", options: ["Paris", "London", "Berlin", "Vienna"], correct: 1 },
+            { category: "Geography", question: "Which country is known as the Land of the Maple Leaf?", options: ["USA", "Canada", "Australia", "New Zealand"], correct: 1 },
+            { category: "Geography", question: "What is the capital of India?", options: ["Mumbai", "Kolkata", "Chennai", "New Delhi"], correct: 3 },
+            { category: "Geography", question: "Which is the largest island in the world?", options: ["Iceland", "Madagascar", "Greenland", "Borneo"], correct: 2 },
+            { category: "Geography", question: "Which sea separates Europe and Africa?", options: ["Red Sea", "Black Sea", "Mediterranean Sea", "Caspian Sea"], correct: 2 },
+            { category: "Geography", question: "What is the capital of Mexico?", options: ["Guadalajara", "Monterrey", "Cancun", "Mexico City"], correct: 3 },
+            { category: "Geography", question: "Which country is famous for the Great Barrier Reef?", options: ["Indonesia", "Philippines", "Australia", "Thailand"], correct: 2 },
+            { category: "Geography", question: "What is the capital of Portugal?", options: ["Porto", "Lisbon", "Faro", "Coimbra"], correct: 1 },
+            { category: "Geography", question: "Which mountain range separates Europe and Asia?", options: ["Alps", "Himalayas", "Ural Mountains", "Andes"], correct: 2 },
+            { category: "Geography", question: "What is the capital of Thailand?", options: ["Phuket", "Chiang Mai", "Bangkok", "Pattaya"], correct: 2 },
+            { category: "Geography", question: "Which is the second-largest country in the world by land area?", options: ["Russia", "China", "USA", "Canada"], correct: 3 },
+            { category: "Geography", question: "What is the capital of Argentina?", options: ["Cordoba", "Rosario", "Buenos Aires", "Mendoza"], correct: 2 },
+            { category: "Geography", question: "Which country is known as the Land of Fire and Ice?", options: ["Norway", "Iceland", "Greenland", "Finland"], correct: 1 },
+            { category: "Geography", question: "What is the capital of Japan?", options: ["Osaka", "Kyoto", "Tokyo", "Nagoya"], correct: 2 }
+        ];
+
+        let currentQuizQuestions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let answered = false;
+
+        const quizContainer = document.getElementById('quiz-container');
+        const quizBox = document.querySelector('.quiz-box');
+        const quizResult = document.getElementById('quiz-result');
+        const quizCategory = document.getElementById('quiz-category');
+        const currentQSpan = document.getElementById('current-q');
+        const questionText = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const quizFooter = document.getElementById('quiz-footer');
+        const nextQBtn = document.getElementById('next-q-btn');
+        const finalScoreSpan = document.getElementById('final-score');
+        const restartQuizBtn = document.getElementById('restart-quiz');
+        const backToChatBtn = document.getElementById('back-to-chat');
+
+        function startQuiz() {
+            // Hide Chat, Show Quiz
+            chatContainer.classList.add('hidden');
+            document.querySelector('.input-area').classList.add('hidden');
+            quizContainer.classList.remove('hidden');
+            quizBox.classList.remove('hidden');
+            quizResult.classList.add('hidden');
+
+            // Select 10 random questions
+            currentQuizQuestions = [...quizData].sort(() => 0.5 - Math.random()).slice(0, 10);
+            currentQuestionIndex = 0;
+            score = 0;
+
+            showQuestion();
+        }
+
+        function showQuestion() {
+            const q = currentQuizQuestions[currentQuestionIndex];
+            quizCategory.innerText = q.category;
+            currentQSpan.innerText = currentQuestionIndex + 1;
+            questionText.innerText = q.question;
+            optionsContainer.innerHTML = '';
+            quizFooter.classList.add('hidden');
+            answered = false;
+
+            q.options.forEach((option, index) => {
+                const btn = document.createElement('div');
+                btn.className = 'option';
+                btn.innerText = option;
+                btn.onclick = () => checkAnswer(index, btn);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(selectedIndex, element) {
+            if (answered) return;
+            answered = true;
+
+            const q = currentQuizQuestions[currentQuestionIndex];
+            const options = optionsContainer.querySelectorAll('.option');
+
+            if (selectedIndex === q.correct) {
+                element.classList.add('correct');
+                score++;
+            } else {
+                element.classList.add('wrong');
+                options[q.correct].classList.add('correct');
+            }
+
+            quizFooter.classList.remove('hidden');
+        }
+
+        nextQBtn.onclick = () => {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < currentQuizQuestions.length) {
+                showQuestion();
+            } else {
+                showResult();
+            }
+        };
+
+        function showResult() {
+            quizBox.classList.add('hidden');
+            quizResult.classList.remove('hidden');
+            const percentage = (score / currentQuizQuestions.length) * 100;
+            finalScoreSpan.innerText = percentage;
+        }
+
+        restartQuizBtn.onclick = startQuiz;
+        backToChatBtn.onclick = () => {
+            quizContainer.classList.add('hidden');
+            chatContainer.classList.remove('hidden');
+            document.querySelector('.input-area').classList.remove('hidden');
+        };
+
+        // Theme Toggle
+        const themeToggle = document.getElementById('theme-toggle');
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            themeToggle.innerHTML = isDark ? '<i class="fas fa-moon"></i> Dark Mode' : '<i class="fas fa-sun"></i> Light Mode';
+        });
+
+        // New Chat
+        const newChatBtn = document.getElementById('new-chat-btn');
+        newChatBtn.addEventListener('click', () => {
+            chatHistory = [];
+            sessionStorage.removeItem('chat_history');
+            messagesList.innerHTML = `
+                <div class="message ai-message">
+                    <div class="bubble">
+                        Hello 👋 I am AmitGPT AI, your smart assistant. How can I help you today?
+                    </div>
+                </div>
+            `;
+            // If in quiz mode, go back to chat
+            backToChatBtn.click();
+        });
+
+        // Sidebar Menu Listeners
+        const historyBtn = document.getElementById('history-btn');
+        const quizModeBtn = document.getElementById('quiz-mode-btn');
+        const settingsBtn = document.getElementById('settings-btn');
+
+        historyBtn.addEventListener('click', () => {
+            alert('Chat history is stored in this session. You can see your current conversation in the chat window.');
+        });
+
+        quizModeBtn.addEventListener('click', () => {
+            startQuiz();
+        });
+
+        settingsBtn.addEventListener('click', () => {
+            // Show API Modal to change key
+            apiModal.classList.remove('hidden');
+        });
+
+        // Mobile Sidebar Toggle
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const closeSidebarBtn = document.getElementById('close-sidebar');
+        const sidebar = document.getElementById('sidebar');
+
+        mobileMenuBtn.addEventListener('click', () => {
+            sidebar.classList.add('active');
+        });
+
+        closeSidebarBtn.addEventListener('click', () => {
+            sidebar.classList.remove('active');
+        });
+
+        // Close sidebar when clicking menu items on mobile
+        const sidebarItems = document.querySelectorAll('.sidebar-nav li');
+        sidebarItems.forEach(item => {
+            item.addEventListener('click', () => {
+                if (window.innerWidth <= 768) {
+                    sidebar.classList.remove('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
