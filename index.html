@@ -443,6 +443,85 @@
             from { opacity: 0; transform: translateX(20px); }
             to { opacity: 1; transform: translateX(0); }
         }
+
+        /* Additional Sections Styles */
+        .contact-container, .privacy-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 20px;
+            overflow-y: auto;
+        }
+
+        .content-box {
+            background-color: var(--ai-bubble);
+            padding: 40px;
+            border-radius: 12px;
+            max-width: 700px;
+            width: 100%;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            animation: fadeIn 0.5s ease;
+        }
+
+        .content-box h2 {
+            margin-bottom: 20px;
+            color: var(--accent-color);
+            font-size: 1.8rem;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            outline: none;
+            font-size: 1rem;
+        }
+
+        .submit-btn {
+            padding: 12px 24px;
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            width: 100%;
+            transition: background 0.2s;
+        }
+
+        .submit-btn:hover {
+            opacity: 0.9;
+        }
+
+        .policy-text h3 {
+            margin: 20px 0 10px;
+            font-size: 1.1rem;
+        }
+
+        .policy-text p {
+            margin-bottom: 15px;
+            line-height: 1.6;
+            color: var(--text-color);
+        }
+
+        .content-box p {
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body class="dark-mode">
@@ -466,6 +545,8 @@
                     <li id="history-btn"><i class="fas fa-history"></i> History</li>
                     <li id="quiz-mode-btn"><i class="fas fa-lightbulb"></i> Quiz Mode</li>
                     <li id="settings-btn"><i class="fas fa-cog"></i> Settings</li>
+                    <li id="contact-btn"><i class="fas fa-envelope"></i> Contact Us</li>
+                    <li id="privacy-btn"><i class="fas fa-user-shield"></i> Privacy Policy</li>
                 </ul>
             </nav>
             <div class="sidebar-footer">
@@ -512,6 +593,47 @@
                     <p>Your Score: <span id="final-score">0</span>%</p>
                     <button id="restart-quiz">Restart Quiz</button>
                     <button id="back-to-chat">Back to Chat</button>
+                </div>
+            </div>
+
+            <!-- Contact Us Section -->
+            <div id="contact-container" class="contact-container hidden">
+                <div class="content-box">
+                    <h2>Contact Us</h2>
+                    <p>Have questions or feedback? We'd love to hear from you.</p>
+                    <form id="contact-form" class="contact-form">
+                        <div class="form-group">
+                            <label for="name">Name</label>
+                            <input type="text" id="name" placeholder="Your Name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" placeholder="Your Email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="message">Message</label>
+                            <textarea id="message" rows="5" placeholder="How can we help you?" required></textarea>
+                        </div>
+                        <button type="submit" class="submit-btn">Send Message</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Privacy Policy Section -->
+            <div id="privacy-container" class="privacy-container hidden">
+                <div class="content-box">
+                    <h2>Privacy Policy</h2>
+                    <div class="policy-text">
+                        <p>Last updated: May 2024</p>
+                        <h3>1. Information We Collect</h3>
+                        <p>AmitGPT AI stores your chat history locally in your browser's session storage. Your API key is stored in local storage for your convenience.</p>
+                        <h3>2. How We Use Information</h3>
+                        <p>We use the information to provide and improve the chatbot experience. We do not sell or share your personal data with third parties.</p>
+                        <h3>3. Data Security</h3>
+                        <p>We take reasonable measures to protect your information. However, please remember that no method of transmission over the internet is 100% secure.</p>
+                        <h3>4. Third-Party Services</h3>
+                        <p>We use Hugging Face Inference API to generate AI responses. Their use of your data is governed by their own privacy policy.</p>
+                    </div>
                 </div>
             </div>
 
@@ -807,9 +929,8 @@
         const backToChatBtn = document.getElementById('back-to-chat');
 
         function startQuiz() {
-            // Hide Chat, Show Quiz
-            chatContainer.classList.add('hidden');
-            document.querySelector('.input-area').classList.add('hidden');
+            // Hide everything, Show Quiz
+            hideAllSections();
             quizContainer.classList.remove('hidden');
             quizBox.classList.remove('hidden');
             quizResult.classList.add('hidden');
@@ -876,7 +997,7 @@
 
         restartQuizBtn.onclick = startQuiz;
         backToChatBtn.onclick = () => {
-            quizContainer.classList.add('hidden');
+            hideAllSections();
             chatContainer.classList.remove('hidden');
             document.querySelector('.input-area').classList.remove('hidden');
         };
@@ -909,8 +1030,24 @@
         const historyBtn = document.getElementById('history-btn');
         const quizModeBtn = document.getElementById('quiz-mode-btn');
         const settingsBtn = document.getElementById('settings-btn');
+        const contactBtn = document.getElementById('contact-btn');
+        const privacyBtn = document.getElementById('privacy-btn');
+
+        const contactContainer = document.getElementById('contact-container');
+        const privacyContainer = document.getElementById('privacy-container');
+
+        function hideAllSections() {
+            chatContainer.classList.add('hidden');
+            quizContainer.classList.add('hidden');
+            contactContainer.classList.add('hidden');
+            privacyContainer.classList.add('hidden');
+            document.querySelector('.input-area').classList.add('hidden');
+        }
 
         historyBtn.addEventListener('click', () => {
+            hideAllSections();
+            chatContainer.classList.remove('hidden');
+            document.querySelector('.input-area').classList.remove('hidden');
             alert('Chat history is stored in this session. You can see your current conversation in the chat window.');
         });
 
@@ -919,8 +1056,26 @@
         });
 
         settingsBtn.addEventListener('click', () => {
-            // Show API Modal to change key
             apiModal.classList.remove('hidden');
+        });
+
+        contactBtn.addEventListener('click', () => {
+            hideAllSections();
+            contactContainer.classList.remove('hidden');
+        });
+
+        privacyBtn.addEventListener('click', () => {
+            hideAllSections();
+            privacyContainer.classList.remove('hidden');
+        });
+
+        // Contact Form Submission
+        document.getElementById('contact-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            alert('Thank you for your message! We will get back to you soon.');
+            e.target.reset();
+            // Go back to chat
+            newChatBtn.click();
         });
 
         // Mobile Sidebar Toggle
