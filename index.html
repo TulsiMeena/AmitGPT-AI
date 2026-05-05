@@ -200,10 +200,10 @@
         .api-key-container input {
             width: 100%;
             padding: 12px;
-            background: rgba(0,0,0,0.2);
+            background: rgba(0,0,0,0.1);
             border: 1px solid var(--glass-border);
             border-radius: 8px;
-            color: white;
+            color: var(--text-color);
             margin-bottom: 10px;
             outline: none;
         }
@@ -314,8 +314,14 @@
             border: none;
             color: var(--text-color);
             outline: none;
-            font-size: 1rem;
-            padding: 5px;
+            font-size: 1.1rem;
+            padding: 10px 5px;
+            font-weight: 500;
+        }
+
+        .input-wrapper input::placeholder {
+            color: var(--text-muted);
+            opacity: 0.7;
         }
 
         .chat-btn {
@@ -572,14 +578,49 @@
                         <p>2. Go to the Chat page and start typing.</p>
                         <p>3. Use the voice button for voice-to-text.</p>
                     </section>
+
+                    <section style="margin-top: 20px;">
+                        <h3>Multi-language Support</h3>
+                        <p>ZenoChat AI supports multiple languages. By default, it uses <strong>Hinglish</strong> (Hindi + English), but you can ask it to respond in:</p>
+                        <ul style="margin-left: 20px; color: var(--text-muted);">
+                            <li>English (Professional/Casual)</li>
+                            <li>Hindi (Pure/Sarkari)</li>
+                            <li>Spanish, French, German, and more.</li>
+                        </ul>
+                    </section>
                 </div>
             </div>
 
             <!-- Privacy Policy Page -->
             <div id="page-privacy" class="page-content">
-                <h2>Privacy Policy</h2>
-                <p>We value your privacy. Your chat data is stored locally in your browser.</p>
-                <p>We do not share your personal data with third parties.</p>
+                <div class="privacy-container" style="max-width: 800px; line-height: 1.6;">
+                    <h2 style="font-size: 2rem; margin-bottom: 20px; color: var(--accent-color);">Privacy & Data Security</h2>
+
+                    <section style="margin-bottom: 30px;">
+                        <h3 style="margin-bottom: 10px; color: var(--text-color);">1. Data Sovereignty</h3>
+                        <p style="color: var(--text-muted);">ZenoChat AI operates on a decentralized data model. Your conversations, API keys, and preferences are stored exclusively within your browser's <strong>Local Storage</strong>. We do not maintain any central servers that store your personal data.</p>
+                    </section>
+
+                    <section style="margin-bottom: 30px;">
+                        <h3 style="margin-bottom: 10px; color: var(--text-color);">2. API Communication</h3>
+                        <p style="color: var(--text-muted);">When you interact with the AI, your messages are sent directly to the <strong>Hugging Face Inference API</strong>. This connection is secured via industry-standard <strong>SSL/TLS encryption</strong>. Your API key is used only to authenticate these requests and is never shared with any other third party.</p>
+                    </section>
+
+                    <section style="margin-bottom: 30px;">
+                        <h3 style="margin-bottom: 10px; color: var(--text-color);">3. Localized Memory</h3>
+                        <p style="color: var(--text-muted);">The "Conversation Memory" feature works by retrieving your past messages from your local device to provide context to the AI. This process happens entirely on the client side. Clearing your browser cache or deleting chats within the app will permanently remove this data.</p>
+                    </section>
+
+                    <section style="margin-bottom: 30px;">
+                        <h3 style="margin-bottom: 10px; color: var(--text-color);">4. No Tracking</h3>
+                        <p style="color: var(--text-muted);">We do not use cookies, pixels, or any third-party analytics scripts to track your behavior. ZenoChat AI is a privacy-first application designed to provide a clean, secure, and focused AI experience.</p>
+                    </section>
+
+                    <div style="background: var(--glass-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--glass-border);">
+                        <h4 style="margin-bottom: 10px;"><i class="fas fa-shield-check" style="color: #22c55e;"></i> Security Assurance</h4>
+                        <p style="font-size: 0.9rem; color: var(--text-muted);">By using ZenoChat AI, you retain full control over your data. For maximum security, we recommend never sharing your API key and using the application in a secure, private browser environment.</p>
+                    </div>
+                </div>
             </div>
         </main>
     </div>
@@ -714,8 +755,15 @@
         // File Upload UI Interaction
         uploadBtn.addEventListener('click', () => fileInput.click());
         fileInput.addEventListener('change', (e) => {
-            if (e.target.files.length > 0) {
-                alert(`File selected: ${e.target.files[0].name} (Upload feature is decorative in this version)`);
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const content = event.target.result;
+                    chatInput.value = `File: ${file.name}\n---\n${content}\n---\n`;
+                    chatInput.focus();
+                };
+                reader.readAsText(file);
             }
         });
 
@@ -739,6 +787,7 @@
                 actionsDiv.innerHTML = `
                     <span class="action-btn" onclick="copyMessage(this)" title="Copy message"><i class="far fa-copy"></i></span>
                     <span class="action-btn" onclick="regenerateMessage(this)" title="Regenerate message"><i class="fas fa-rotate-right"></i></span>
+                    <span class="action-btn" onclick="speakMessage(this)" title="Speak message"><i class="fas fa-volume-up"></i></span>
                 `;
                 msgDiv.appendChild(actionsDiv);
             }
@@ -757,6 +806,23 @@
                     icon.className = 'far fa-copy';
                 }, 2000);
             });
+        }
+
+        function speakMessage(btn) {
+            const text = btn.closest('.message').querySelector('.message-content').textContent;
+            const utterance = new SpeechSynthesisUtterance(text);
+
+            // Toggle speaking
+            if (window.speechSynthesis.speaking) {
+                window.speechSynthesis.cancel();
+                btn.innerHTML = '<i class="fas fa-volume-up"></i>';
+            } else {
+                utterance.onend = () => {
+                    btn.innerHTML = '<i class="fas fa-volume-up"></i>';
+                };
+                btn.innerHTML = '<i class="fas fa-stop"></i>';
+                window.speechSynthesis.speak(utterance);
+            }
         }
 
         async function regenerateMessage(btn) {
@@ -822,10 +888,11 @@
             if (currentChatId) {
                 const currentChat = chats.find(c => c.id === currentChatId);
                 if (currentChat && currentChat.messages.length > 0) {
-                    // Include last 5 messages for context
-                    const lastMsgs = currentChat.messages.slice(-5);
+                    // Include last 10 messages for deeper context
+                    const lastMsgs = currentChat.messages.slice(-10);
                     lastMsgs.forEach(m => {
-                        context += `${m.isUser ? 'User' : 'AI'}: ${m.text}\n`;
+                        const cleanText = m.text.replace(/<[^>]*>/g, ''); // Strip HTML
+                        context += `${m.isUser ? 'User' : 'AI'}: ${cleanText}\n`;
                     });
                 }
             }
