@@ -158,6 +158,10 @@
             display: block;
         }
 
+        #page-chat.active {
+            display: flex;
+        }
+
         /* Home Page Styles */
         .hero-section {
             display: flex;
@@ -358,6 +362,7 @@
             padding: 20px;
             background: var(--bg-color);
             border-top: 1px solid var(--glass-border);
+            flex-shrink: 0;
         }
 
         .input-wrapper {
@@ -371,18 +376,22 @@
             box-shadow: 0 0 15px rgba(0,0,0,0.2);
         }
 
-        .input-wrapper input {
+        .input-wrapper textarea {
             flex-grow: 1;
             background: transparent;
             border: none;
             color: var(--text-color);
             outline: none;
-            font-size: 1.1rem;
-            padding: 10px 5px;
+            font-size: 1rem;
+            padding: 8px 5px;
             font-weight: 500;
+            resize: none;
+            max-height: 200px;
+            font-family: inherit;
+            line-height: 1.4;
         }
 
-        .input-wrapper input::placeholder {
+        .input-wrapper textarea::placeholder {
             color: var(--text-muted);
             opacity: 0.7;
         }
@@ -617,15 +626,25 @@
                     </div>
 
                     <div class="api-key-container">
-                        <p style="margin-bottom: 10px; font-size: 0.9rem;">Hugging Face API Key</p>
-                        <input type="password" id="api-key-input" placeholder="hf_...">
+                        <p style="margin-bottom: 10px; font-size: 0.9rem;">Select AI Provider</p>
+                        <select id="provider-select" style="width: 100%; padding: 10px; background: rgba(0,0,0,0.1); border: 1px solid var(--glass-border); border-radius: 8px; color: var(--text-color); outline: none; margin-bottom: 15px;" onchange="updateModelList()">
+                            <option value="hf">Hugging Face</option>
+                            <option value="groq">Groq (Ultra Fast)</option>
+                        </select>
+
+                        <div id="hf-key-group">
+                            <p style="margin-bottom: 10px; font-size: 0.9rem;">Hugging Face API Key</p>
+                            <input type="password" id="api-key-input" placeholder="hf_...">
+                        </div>
+
+                        <div id="groq-key-group" style="display: none;">
+                            <p style="margin-bottom: 10px; font-size: 0.9rem;">Groq API Key</p>
+                            <input type="password" id="groq-key-input" placeholder="gsk_...">
+                        </div>
 
                         <p style="margin: 15px 0 10px; font-size: 0.9rem;">Select AI Model</p>
                         <select id="model-select" style="width: 100%; padding: 10px; background: rgba(0,0,0,0.1); border: 1px solid var(--glass-border); border-radius: 8px; color: var(--text-color); outline: none; margin-bottom: 15px;">
-                            <option value="mistralai/Mistral-7B-Instruct-v0.2">Mistral 7B (Default)</option>
-                            <option value="meta-llama/Meta-Llama-3-8B-Instruct">Llama 3 (8B)</option>
-                            <option value="microsoft/Phi-3-mini-4k-instruct">Phi-3 Mini</option>
-                            <option value="google/gemma-7b-it">Google Gemma 7B</option>
+                            <!-- Models will be dynamically populated -->
                         </select>
 
                         <button class="btn-primary" style="padding: 8px 20px; font-size: 0.9rem;" id="save-settings-btn">Save Settings</button>
@@ -634,7 +653,7 @@
             </div>
 
             <!-- Chat Page -->
-            <div id="page-chat" class="page-content" style="padding: 0;">
+            <div id="page-chat" class="page-content" style="padding: 0; overflow: hidden;">
                 <div class="chat-container">
                     <div id="chat-messages">
                         <!-- Welcome message -->
@@ -646,7 +665,7 @@
                         <div class="input-wrapper">
                             <input type="file" id="file-upload" style="display: none;">
                             <button class="chat-btn" id="upload-btn" title="Upload File"><i class="fas fa-paperclip"></i></button>
-                            <input type="text" id="chat-input" placeholder="Type a message...">
+                            <textarea id="chat-input" placeholder="Type a message..." rows="1"></textarea>
                             <button class="chat-btn" id="voice-btn" title="Voice Input"><i class="fas fa-microphone"></i></button>
                             <button class="chat-btn" id="stop-btn" title="Stop Generation" style="display: none; color: #ef4444;"><i class="fas fa-circle-stop"></i></button>
                             <button class="chat-btn send-btn" id="send-btn" title="Send Message"><i class="fas fa-paper-plane"></i></button>
@@ -674,7 +693,7 @@
                 <div class="help-content">
                     <section>
                         <h3>How to use ZenoChat AI</h3>
-                        <p>1. Enter your Hugging Face API key in the settings.</p>
+                        <p>1. Enter your API key in the settings (Hugging Face or Groq).</p>
                         <p>2. Go to the Chat page and start typing.</p>
                         <p>3. Use the voice button for voice-to-text.</p>
                     </section>
@@ -703,7 +722,7 @@
 
                     <section style="margin-bottom: 30px;">
                         <h3 style="margin-bottom: 10px; color: var(--text-color);">2. API Communication</h3>
-                        <p style="color: var(--text-muted);">When you interact with the AI, your messages are sent directly to the <strong>Hugging Face Inference API</strong>. This connection is secured via industry-standard <strong>SSL/TLS encryption</strong>. Your API key is used only to authenticate these requests and is never shared with any other third party.</p>
+                        <p style="color: var(--text-muted);">When you interact with the AI, your messages are sent directly to the selected provider (<strong>Hugging Face</strong> or <strong>Groq</strong>). This connection is secured via industry-standard <strong>SSL/TLS encryption</strong>. Your API key is used only to authenticate these requests and is never shared with any other third party.</p>
                     </section>
 
                     <section style="margin-bottom: 30px;">
@@ -741,6 +760,19 @@
                         <button class="btn-primary" style="padding: 8px 20px; font-size: 0.9rem; background: #ef4444; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);" onclick="clearAllData()">Reset App</button>
                     </div>
                     <div class="settings-card" style="background: var(--glass-bg); padding: 20px; border-radius: 15px; border: 1px solid var(--glass-border);">
+                        <h4>AI Provider & Model</h4>
+                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px;">Configure your AI engine.</p>
+                        <select id="provider-select-adv" style="width: 100%; padding: 10px; background: rgba(0,0,0,0.1); border: 1px solid var(--glass-border); border-radius: 8px; color: var(--text-color); outline: none; margin-bottom: 10px;" onchange="syncProvider(this.value)">
+                            <option value="hf">Hugging Face</option>
+                            <option value="groq">Groq (Ultra Fast)</option>
+                        </select>
+                        <select id="model-select-adv" style="width: 100%; padding: 10px; background: rgba(0,0,0,0.1); border: 1px solid var(--glass-border); border-radius: 8px; color: var(--text-color); outline: none; margin-bottom: 10px;" onchange="syncModel(this.value)">
+                            <!-- Synced with home -->
+                        </select>
+                        <input type="password" id="hf-key-adv" placeholder="HF Key (hf_...)" style="width: 100%; padding: 8px; background: rgba(0,0,0,0.1); border: 1px solid var(--glass-border); border-radius: 8px; color: var(--text-color); outline: none; margin-bottom: 5px; font-size: 0.8rem;" onchange="syncKeys()">
+                        <input type="password" id="groq-key-adv" placeholder="Groq Key (gsk_...)" style="width: 100%; padding: 8px; background: rgba(0,0,0,0.1); border: 1px solid var(--glass-border); border-radius: 8px; color: var(--text-color); outline: none; font-size: 0.8rem;" onchange="syncKeys()">
+                    </div>
+                    <div class="settings-card" style="background: var(--glass-bg); padding: 20px; border-radius: 15px; border: 1px solid var(--glass-border);">
                         <h4>AI Persona</h4>
                         <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;">Change how the AI talks to you.</p>
                         <select id="persona-select" style="width: 100%; padding: 10px; background: rgba(0,0,0,0.1); border: 1px solid var(--glass-border); border-radius: 8px; color: var(--text-color); outline: none;" onchange="savePersona()">
@@ -775,6 +807,79 @@
 
     <script>
         let abortController = null;
+
+        const providerModels = {
+            hf: [
+                { id: "mistralai/Mistral-7B-Instruct-v0.2", name: "Mistral 7B" },
+                { id: "meta-llama/Meta-Llama-3-8B-Instruct", name: "Llama 3 (8B)" },
+                { id: "microsoft/Phi-3-mini-4k-instruct", name: "Phi-3 Mini" },
+                { id: "google/gemma-7b-it", name: "Google Gemma 7B" }
+            ],
+            groq: [
+                { id: "llama3-8b-8192", name: "Llama 3 8B" },
+                { id: "llama3-70b-8192", name: "Llama 3 70B" },
+                { id: "mixtral-8x7b-32768", name: "Mixtral 8x7B" },
+                { id: "gemma-7b-it", name: "Gemma 7B" }
+            ]
+        };
+
+        function updateModelList() {
+            const providerSelect = document.getElementById('provider-select');
+            const providerSelectAdv = document.getElementById('provider-select-adv');
+            const provider = providerSelect.value;
+
+            const modelSelect = document.getElementById('model-select');
+            const modelSelectAdv = document.getElementById('model-select-adv');
+
+            const hfGroup = document.getElementById('hf-key-group');
+            const groqGroup = document.getElementById('groq-key-group');
+
+            if (hfGroup) hfGroup.style.display = provider === 'hf' ? 'block' : 'none';
+            if (groqGroup) groqGroup.style.display = provider === 'groq' ? 'block' : 'none';
+
+            const populate = (select) => {
+                if (!select) return;
+                select.innerHTML = '';
+                providerModels[provider].forEach(model => {
+                    const opt = document.createElement('option');
+                    opt.value = model.id;
+                    opt.textContent = model.name;
+                    select.appendChild(opt);
+                });
+            };
+
+            populate(modelSelect);
+            populate(modelSelectAdv);
+
+            if (providerSelectAdv) providerSelectAdv.value = provider;
+        }
+
+        function syncProvider(val) {
+            const homeProvider = document.getElementById('provider-select');
+            homeProvider.value = val;
+            updateModelList();
+            localStorage.setItem('ai_provider', val);
+        }
+
+        function syncModel(val) {
+            const homeModel = document.getElementById('model-select');
+            homeModel.value = val;
+            localStorage.setItem('selected_model', val);
+        }
+
+        function syncKeys() {
+            const hfAdv = document.getElementById('hf-key-adv');
+            const groqAdv = document.getElementById('groq-key-adv');
+            const hfHome = document.getElementById('api-key-input');
+            const groqHome = document.getElementById('groq-key-input');
+
+            if (hfAdv && hfHome) hfHome.value = hfAdv.value;
+            if (groqAdv && groqHome) groqHome.value = groqAdv.value;
+
+            localStorage.setItem('hf_api_key', hfAdv.value);
+            localStorage.setItem('groq_api_key', groqAdv.value);
+        }
+
         let soundEnabled = JSON.parse(localStorage.getItem('zenochat_sound') || 'false');
 
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -860,6 +965,8 @@
         function usePrompt(text) {
             navigateTo('chat');
             chatInput.value = text;
+            chatInput.style.height = 'auto';
+            chatInput.style.height = chatInput.scrollHeight + 'px';
             chatInput.focus();
         }
 
@@ -868,23 +975,46 @@
         let chats = JSON.parse(localStorage.getItem('zenochat_history') || '[]');
 
         async function generateAutoTitle(firstMsg) {
-            const apiKey = localStorage.getItem('hf_api_key');
-            if (!apiKey) return firstMsg.substring(0, 30);
+            const provider = localStorage.getItem('ai_provider') || 'hf';
+            const hfKey = localStorage.getItem('hf_api_key');
+            const groqKey = localStorage.getItem('groq_api_key');
+
+            if (provider === 'hf' && !hfKey) return firstMsg.substring(0, 30);
+            if (provider === 'groq' && !groqKey) return firstMsg.substring(0, 30);
 
             try {
-                const response = await fetch(
-                    "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2",
-                    {
-                        headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-                        method: "POST",
-                        body: JSON.stringify({
-                            inputs: `[INST] Summarize this message into a very short 2-3 word title: "${firstMsg}" [/INST]`,
-                            parameters: { max_new_tokens: 10, return_full_text: false }
-                        }),
-                    }
-                );
-                const result = await response.json();
-                return result[0].generated_text.replace(/"/g, '').trim() || firstMsg.substring(0, 30);
+                let title = "";
+                if (provider === 'hf') {
+                    const response = await fetch(
+                        "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2",
+                        {
+                            headers: { Authorization: `Bearer ${hfKey}`, "Content-Type": "application/json" },
+                            method: "POST",
+                            body: JSON.stringify({
+                                inputs: `[INST] Summarize this message into a very short 2-3 word title: "${firstMsg}" [/INST]`,
+                                parameters: { max_new_tokens: 10, return_full_text: false }
+                            }),
+                        }
+                    );
+                    const result = await response.json();
+                    title = result[0].generated_text.replace(/"/g, '').trim();
+                } else {
+                    const response = await fetch(
+                        "https://api.groq.com/openai/v1/chat/completions",
+                        {
+                            headers: { Authorization: `Bearer ${groqKey}`, "Content-Type": "application/json" },
+                            method: "POST",
+                            body: JSON.stringify({
+                                model: "llama3-8b-8192",
+                                messages: [{ role: "user", content: `Summarize this into 2-3 words title: "${firstMsg}"` }],
+                                max_tokens: 10
+                            }),
+                        }
+                    );
+                    const result = await response.json();
+                    title = result.choices[0].message.content.replace(/"/g, '').trim();
+                }
+                return title || firstMsg.substring(0, 30);
             } catch (e) {
                 return firstMsg.substring(0, 30);
             }
@@ -999,6 +1129,8 @@
             recognition.onresult = (event) => {
                 const transcript = event.results[0][0].transcript;
                 chatInput.value = transcript;
+                chatInput.style.height = 'auto';
+                chatInput.style.height = chatInput.scrollHeight + 'px';
             };
 
             recognition.onend = () => {
@@ -1027,6 +1159,8 @@
                 reader.onload = (event) => {
                     const content = event.target.result;
                     chatInput.value = `File: ${file.name}\n---\n${content}\n---\n`;
+                    chatInput.style.height = 'auto';
+                    chatInput.style.height = chatInput.scrollHeight + 'px';
                     chatInput.focus();
                 };
                 reader.readAsText(file);
@@ -1084,7 +1218,6 @@
             const text = btn.closest('.message').querySelector('.message-content').textContent;
             const utterance = new SpeechSynthesisUtterance(text);
 
-            // Toggle speaking
             if (window.speechSynthesis.speaking) {
                 window.speechSynthesis.cancel();
                 btn.innerHTML = '<i class="fas fa-volume-up"></i>';
@@ -1106,7 +1239,6 @@
 
             if (index === -1) return;
 
-            // Find the last user message before this AI message
             let lastUserMsg = "";
             for (let i = index - 1; i >= 0; i--) {
                 if (messages[i].classList.contains('user')) {
@@ -1117,7 +1249,6 @@
 
             if (!lastUserMsg) return;
 
-            // Remove all messages from this one onwards
             while (chatMessages.children.length > index) {
                 chatMessages.removeChild(chatMessages.lastChild);
             }
@@ -1150,48 +1281,66 @@
 
         async function fetchAIResponse(userMessage) {
             abortController = new AbortController();
-            const apiKey = localStorage.getItem('hf_api_key');
-            const selectedModel = localStorage.getItem('hf_model') || "mistralai/Mistral-7B-Instruct-v0.2";
+            const provider = localStorage.getItem('ai_provider') || 'hf';
+            const hfKey = localStorage.getItem('hf_api_key');
+            const groqKey = localStorage.getItem('groq_api_key');
+            const selectedModel = localStorage.getItem('selected_model') || (provider === 'hf' ? "mistralai/Mistral-7B-Instruct-v0.2" : "llama3-8b-8192");
             const selectedPersona = localStorage.getItem('zenochat_persona') || "Hinglish mix";
 
-            if (!apiKey) {
-                return "Please configure your Hugging Face API key on the Home page first.";
-            }
+            if (provider === 'hf' && !hfKey) return "Please configure Hugging Face API key.";
+            if (provider === 'groq' && !groqKey) return "Please configure Groq API key.";
 
-            // Prepare context from previous messages in this chat
             let context = `You are ZenoChat AI, a premium, modern AI assistant. Your response style should be ${selectedPersona}. Be friendly, professional, smart, and helpful. Act like a teacher, developer, or advisor when needed.\n\n`;
 
             if (currentChatId) {
                 const currentChat = chats.find(c => c.id === currentChatId);
                 if (currentChat && currentChat.messages.length > 0) {
-                    // Include last 10 messages for deeper context
                     const lastMsgs = currentChat.messages.slice(-10);
                     lastMsgs.forEach(m => {
-                        const cleanText = m.text.replace(/<[^>]*>/g, ''); // Strip HTML
+                        const cleanText = m.text.replace(/<[^>]*>/g, '');
                         context += `${m.isUser ? 'User' : 'AI'}: ${cleanText}\n`;
                     });
                 }
             }
 
             try {
-                const response = await fetch(
-                    `https://api-inference.huggingface.co/models/${selectedModel}`,
-                    {
-                        headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-                        method: "POST",
-                        signal: abortController.signal,
-                        body: JSON.stringify({
-                            inputs: `[INST] ${context} User: ${userMessage} [/INST]`,
-                            parameters: { max_new_tokens: 500, return_full_text: false }
-                        }),
-                    }
-                );
+                let response;
+                if (provider === 'hf') {
+                    response = await fetch(
+                        `https://api-inference.huggingface.co/models/${selectedModel}`,
+                        {
+                            headers: { Authorization: `Bearer ${hfKey}`, "Content-Type": "application/json" },
+                            method: "POST",
+                            signal: abortController.signal,
+                            body: JSON.stringify({
+                                inputs: `[INST] ${context} User: ${userMessage} [/INST]`,
+                                parameters: { max_new_tokens: 500, return_full_text: false }
+                            }),
+                        }
+                    );
+                } else {
+                    response = await fetch(
+                        "https://api.groq.com/openai/v1/chat/completions",
+                        {
+                            headers: { Authorization: `Bearer ${groqKey}`, "Content-Type": "application/json" },
+                            method: "POST",
+                            signal: abortController.signal,
+                            body: JSON.stringify({
+                                model: selectedModel,
+                                messages: [
+                                    { role: "system", content: context },
+                                    { role: "user", content: userMessage }
+                                ],
+                                max_tokens: 500
+                            }),
+                        }
+                    );
+                }
 
                 const result = await response.json();
-                if (result.error) {
-                    return `Error: ${result.error}`;
-                }
-                return result[0].generated_text;
+                if (result.error) return `Error: ${result.error.message || result.error}`;
+
+                return provider === 'hf' ? result[0].generated_text : result.choices[0].message.content;
             } catch (error) {
                 console.error("API Error:", error);
                 return "I am sorry, but I encountered an error while processing your request. Please check your API key and internet connection.";
@@ -1205,6 +1354,7 @@
             addMessage(text, true);
             playNotificationSound('send');
             chatInput.value = '';
+            chatInput.style.height = 'auto';
 
             isGenerating = true;
             document.getElementById('stop-btn').style.display = 'block';
@@ -1239,32 +1389,61 @@
         });
 
         sendBtn.addEventListener('click', handleSend);
-        chatInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') handleSend();
+        chatInput.addEventListener('input', () => {
+            chatInput.style.height = 'auto';
+            chatInput.style.height = chatInput.scrollHeight + 'px';
+        });
+
+        chatInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSend();
+                chatInput.style.height = 'auto';
+            }
         });
 
         // Settings Management
+        const providerSelect = document.getElementById('provider-select');
         const apiKeyInput = document.getElementById('api-key-input');
+        const groqKeyInput = document.getElementById('groq-key-input');
         const modelSelect = document.getElementById('model-select');
         const saveSettingsBtn = document.getElementById('save-settings-btn');
 
         // Load saved settings
-        const savedKey = localStorage.getItem('hf_api_key');
-        if (savedKey) apiKeyInput.value = savedKey;
+        const savedProvider = localStorage.getItem('ai_provider') || 'hf';
+        if (providerSelect) {
+            providerSelect.value = savedProvider;
+            updateModelList();
+        }
 
-        const savedModel = localStorage.getItem('hf_model');
-        if (savedModel) modelSelect.value = savedModel;
+        const savedHFKey = localStorage.getItem('hf_api_key');
+        if (savedHFKey) {
+            if (apiKeyInput) apiKeyInput.value = savedHFKey;
+            const hfKeyAdv = document.getElementById('hf-key-adv');
+            if (hfKeyAdv) hfKeyAdv.value = savedHFKey;
+        }
+
+        const savedGroqKey = localStorage.getItem('groq_api_key');
+        if (savedGroqKey) {
+            if (groqKeyInput) groqKeyInput.value = savedGroqKey;
+            const groqKeyAdv = document.getElementById('groq-key-adv');
+            if (groqKeyAdv) groqKeyAdv.value = savedGroqKey;
+        }
+
+        const savedModel = localStorage.getItem('selected_model');
+        if (savedModel && modelSelect) modelSelect.value = savedModel;
 
         saveSettingsBtn.addEventListener('click', () => {
-            const key = apiKeyInput.value.trim();
+            const provider = providerSelect.value;
+            const hfKey = apiKeyInput.value.trim();
+            const groqKey = groqKeyInput.value.trim();
             const model = modelSelect.value;
-            if (key) {
-                localStorage.setItem('hf_api_key', key);
-                localStorage.setItem('hf_model', model);
-                alert('Settings saved successfully!');
-            } else {
-                alert('Please enter a valid API key');
-            }
+
+            localStorage.setItem('ai_provider', provider);
+            localStorage.setItem('hf_api_key', hfKey);
+            localStorage.setItem('groq_api_key', groqKey);
+            localStorage.setItem('selected_model', model);
+            alert('Settings saved successfully!');
         });
 
         // SPA Navigation Logic
@@ -1274,7 +1453,6 @@
         const mobileMenuBtn = document.getElementById('mobile-menu-btn');
 
         function navigateTo(pageId) {
-            // Update active nav item
             navItems.forEach(i => {
                 if (i.getAttribute('data-page') === pageId) {
                     i.classList.add('active');
@@ -1283,12 +1461,10 @@
                 }
             });
 
-            // Show active page
             pages.forEach(p => p.classList.remove('active'));
             const activePage = document.getElementById(`page-${pageId}`);
             if (activePage) activePage.classList.add('active');
 
-            // Close mobile sidebar if open
             if (window.innerWidth <= 768) {
                 sidebar.classList.remove('open');
             }
@@ -1302,20 +1478,16 @@
             });
         });
 
-        // Mobile Menu Toggle
         mobileMenuBtn.addEventListener('click', () => {
             sidebar.classList.toggle('open');
         });
 
-        // Initialize Persona & Sounds
         const savedPersona = localStorage.getItem('zenochat_persona');
         if (savedPersona) document.getElementById('persona-select').value = savedPersona;
         document.getElementById('sound-toggle').checked = soundEnabled;
 
-        // Initialize History
         renderHistory();
 
-        // Keyboard Shortcuts
         window.addEventListener('keydown', (e) => {
             if (e.altKey) {
                 if (e.key === 'c') navigateTo('chat');
@@ -1324,9 +1496,7 @@
             }
         });
 
-        // Theme Toggle Logic
         const themeToggle = document.getElementById('theme-toggle');
-        const html = document.documentElement;
         let isDark = true;
 
         themeToggle.addEventListener('click', () => {
